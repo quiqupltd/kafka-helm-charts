@@ -25,24 +25,24 @@ spec:
         prometheus.io/scrape: {{ .Values.monitoring.enabled | quote }}
         prometheus.io/port: {{ .Values.monitoring.port | quote }}
         prometheus.io/path: {{ .Values.monitoring.path | quote }}
-    spec:   
-      volumes:     
+    spec:
+      volumes:
         - name: kafka-secrets
           secret:
             secretName: {{ include "fullname" . }}-kafka-secrets
             items:
               - key: client.keystore.jks
                 path: client.keystore.jks
-              - key: client.truststore.jks 
+              - key: client.truststore.jks
                 path: client.truststore.jks
               - key: jaas.conf
                 path: jaas.conf
               - key: keytab
-                path: keytab  
+                path: keytab
         - name: krb
           configMap:
             name: {{ include "fullname" . | quote }}
-      serviceAccountName: {{ .Values.serviceAccount }}  
+      serviceAccountName: {{ .Values.serviceAccount }}
       containers:
       - name: {{ .Chart.Name }}
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
@@ -60,7 +60,7 @@ spec:
             - /etc/landoop/liveliness
           initialDelaySeconds: 10
           periodSeconds: 5
-          timeoutSeconds: 5        
+          timeoutSeconds: 5
         volumeMounts:
           - name: kafka-secrets
             mountPath: "/mnt/secrets"
@@ -69,6 +69,14 @@ spec:
             subPath: "krb5.conf"
         resources:
 {{ toYaml .Values.resources | indent 10 }}
+        {{- if .Values.nodeSelector }}
+        nodeSelector:
+{{ toYaml .Values.nodeSelector | indent 10 }}
+        {{- end }}
+        {{- if .Values.tolerations }}
+        tolerations:
+{{ toYaml .Values.tolerations | indent 10 }}
+        {{- end }}
         env:
         - name: ROOT_LOG_LEVEL
           value: {{ .Values.monitoring.logLevel | quote }}
@@ -88,22 +96,22 @@ spec:
         - name: SQL_METRIC_FREQUENCY
           value: {{ .Values.metricsFrequency | quote }}
         - name: SQL_PORT
-          value: {{ .Values.port | quote }}  
+          value: {{ .Values.port | quote }}
         - name: SQL_REGISTRY_PROVIDER
-          value: {{ .Values.registryProvider | quote }} 
+          value: {{ .Values.registryProvider | quote }}
         - name: SECURITY_PROTOCOL
-          value: {{ include "securityProtocol" . | quote }}             
+          value: {{ include "securityProtocol" . | quote }}
         - name: SASL_MECHANISM
-          value: {{ default "GSSAPI" .Values.kafka.sasl.mechanism | quote }} 
+          value: {{ default "GSSAPI" .Values.kafka.sasl.mechanism | quote }}
         - name: SSL_TRUSTSTORE_LOCATION
-          value: "/mnt/secrets/client.truststore.jks" 
+          value: "/mnt/secrets/client.truststore.jks"
         - name: SSL_KEYSTORE_LOCATION
-          value: "/mnt/secrets/client.truststore.jks" 
+          value: "/mnt/secrets/client.truststore.jks"
         - name: SSL_TRUSTSTORE_PASSWORD
           valueFrom:
             secretKeyRef:
               name: "{{ include "fullname" . }}-kafka-secrets"
-              key:  "client.truststore.password"           
+              key:  "client.truststore.password"
         - name: SSL_KEYSTORE_PASSWORD
           valueFrom:
             secretKeyRef:
@@ -113,13 +121,12 @@ spec:
           valueFrom:
             secretKeyRef:
               name: "{{ include "fullname" . }}-kafka-secrets"
-              key:  "client.key.password" 
-       
+              key:  "client.key.password"
+
         {{- if .Values.kafka.sasl.enabled -}}
         - name: JAVA_OPTS
-          value: "-Djava.security.auth.login.config=/mnt/secrets/jaas.conf {{ .Values.javaOpts }}"   
+          value: "-Djava.security.auth.login.config=/mnt/secrets/jaas.conf {{ .Values.javaOpts }}"
         {{ else }}
         - name: JAVA_OPTS
-          value: {{ .Values.javaOpts | quote }}  
-        {{- end -}}                                           
-        
+          value: {{ .Values.javaOpts | quote }}
+        {{- end -}}

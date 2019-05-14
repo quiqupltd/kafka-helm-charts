@@ -8,6 +8,9 @@ image:
   tag: 2.2
   pullPolicy: IfNotPresent
 
+
+nodeSelector: {}
+tolerations: {}
 # Resource management
 resources:
   limits:
@@ -26,7 +29,7 @@ monitoring:
 podManagementPolicy: OrderedReady
 
 # serviceAccount is the service account to run the deployment as
-serviceAccount: default 
+serviceAccount: default
 
 # javaOpts is any JVM options to pass to the runner
 javaOpts: -Xms256m -Xmx512m
@@ -55,11 +58,11 @@ sql: |-
 kafka:
   ssl:
     enabled: false
-    trustStoreFileData: 
-    keyStoreFileData: 
-    trustStorePassword: 
-    keyStorePassword: 
-    keyPassword: 
+    trustStoreFileData:
+    keyStoreFileData:
+    trustStorePassword:
+    keyStorePassword:
+    keyPassword:
   sasl:
     enabled: false
     # keyTabData is the contents kerberos keytab file is using kerberos mounted in /mnt/secrets
@@ -67,22 +70,22 @@ kafka:
 
     # jaasFileData is the contents of the kafka jaas file mounted in /mnt/secrets
     jaasFileData: |-
-      
+
     # mechanism is the sasl autentication mechnaism GSSAPI, SCRAM or PLAIN
     mechanism: "GSSAPI"
     # krb5Conf is the kerberos config data to be mounted into /etc
     krb5Conf: |-
 
-  bootstrapServers: 
+  bootstrapServers:
     - name: kafka
       port: 9092
       sslPort: 9093
       saslSslPort: 9094
-      saslPlainTextPort: 9095  
-      
+      saslPlainTextPort: 9095
+
 
 # schemaRegistries is the location of the schema registry
-schemaRegistries: 
+schemaRegistries:
   enabled: true
   hosts:
     - host: schema-registry
