@@ -33,17 +33,26 @@ _kafka_lenses_metrics
 {{- define "securityProtocol" -}}
 {{- if and .Values.kafka.sasl.enabled .Values.kafka.ssl.enabled -}}
 SASL_SSL
-{{- end -}} 
+{{- end -}}
 {{- if and .Values.kafka.sasl.enabled (not .Values.kafka.ssl.enabled) -}}
 SASL_PLAINTEXT
-{{- end -}} 
+{{- end -}}
 {{- if and .Values.kafka.ssl.enabled (not .Values.kafka.sasl.enabled) -}}
 SSL
-{{- end -}} 
+{{- end -}}
 {{- if and (not .Values.kafka.ssl.enabled) (not .Values.kafka.sasl.enabled) -}}
 PLAINTEXT
 {{- end -}}
 {{- end -}}
+
+{{- define "processors" -}}
+{{- if .Values.processors -}}
+{{- .Values.processors }}
+{{- else -}}
+{{- (list (dict "sql" .Values.sql "application_id" .Values.application_id)) -}}
+{{- end -}}
+{{- end -}}
+
 
 {{- define "bootstrapBrokers" -}}
 {{- $protocol := include "securityProtocol" . -}}
@@ -51,7 +60,7 @@ PLAINTEXT
   {{- if $index -}}
     {{- if eq $protocol "PLAINTEXT" -}}
   ,{{$protocol}}://{{$element.name}}:{{$element.port}}
-    {{- end -}}  
+    {{- end -}}
     {{- if eq $protocol "SSL" -}}
   ,{{$protocol}}://{{$element.name}}:{{$element.sslPort}}
     {{- end -}}
@@ -64,7 +73,7 @@ PLAINTEXT
   {{- else -}}
     {{- if eq $protocol "PLAINTEXT" -}}
   {{$protocol}}://{{$element.name}}:{{$element.port}}
-    {{- end -}}  
+    {{- end -}}
     {{- if eq $protocol "SSL" -}}
   {{$protocol}}://{{$element.name}}:{{$element.sslPort}}
     {{- end -}}
@@ -74,7 +83,7 @@ PLAINTEXT
     {{- if eq $protocol "SASL_PLAINTEXT" -}}
   {{$protocol}}://{{$element.name}}:{{$element.saslPlainTextPort}}
     {{- end -}}
-  {{- end -}}  
+  {{- end -}}
   {{end}}
 {{- end -}}
 
@@ -103,5 +112,5 @@ PLAINTEXT
   ,"ssl.truststore.password" : {{ .Values.kafka.ssl.trustStorePassword | quote }}
   {{- end }}
 }
-{{- end -}}    
+{{- end -}}
 

@@ -8,7 +8,6 @@ image:
   tag: 2.2
   pullPolicy: IfNotPresent
 
-
 nodeSelector: {}
 tolerations: {}
 # Resource management
@@ -38,23 +37,39 @@ javaOpts: -Xms256m -Xmx512m
 # registryProvider
 registryProvider: default
 
-# Lenses SQL to run
+processors:
+  - application_id: ""
+    sql: |-
+      #  SET autocreate=true;
+      #  INSERT INTO `lenses-sql-k8-test`
+
+      #  SELECT MMSI, Speed, Longitude AS Long, Latitude AS Lat, `Timestamp`
+      #  FROM iot_data
+      #  WHERE Speed > 10
+      #  AND _ktype=AVRO AND _vtype=AVRO
+
+      # kafka ssl
+      # The key and truststores file data are the base64 encoded contents of the files. YOU MUST PROVIDE THE DATA BASE64 encoded
+      # and added to the kafka secret and mounted into /mnt/secrets
+      # Password are not base64 encode
+
+      # Users can extend the chart to add extra sasl and ssl props required. They will be loaded by the runner. Its looks for env vars beginning with ssl or sasl
+
 sql: |-
-#  SET autocreate=true;
-#  INSERT INTO `lenses-sql-k8-test`
+  #  SET autocreate=true;
+  #  INSERT INTO `lenses-sql-k8-test`
 
-#  SELECT MMSI, Speed, Longitude AS Long, Latitude AS Lat, `Timestamp`
-#  FROM iot_data
-#  WHERE Speed > 10
-#  AND _ktype=AVRO AND _vtype=AVRO
+  #  SELECT MMSI, Speed, Longitude AS Long, Latitude AS Lat, `Timestamp`
+  #  FROM iot_data
+  #  WHERE Speed > 10
+  #  AND _ktype=AVRO AND _vtype=AVRO
 
-# kafka ssl
-# The key and truststores file data are the base64 encoded contents of the files. YOU MUST PROVIDE THE DATA BASE64 encoded
-# and added to the kafka secret and mounted into /mnt/secrets
-# Password are not base64 encode
+  # kafka ssl
+  # The key and truststores file data are the base64 encoded contents of the files. YOU MUST PROVIDE THE DATA BASE64 encoded
+  # and added to the kafka secret and mounted into /mnt/secrets
+  # Password are not base64 encode
 
-# Users can extend the chart to add extra sasl and ssl props required. They will be loaded by the runner. Its looks for env vars beginning with ssl or sasl
-
+  # Users can extend the chart to add extra sasl and ssl props required. They will be loaded by the runner. Its looks for env vars beginning with ssl or sasl
 kafka:
   ssl:
     enabled: false

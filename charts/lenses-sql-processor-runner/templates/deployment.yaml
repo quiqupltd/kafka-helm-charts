@@ -1,35 +1,39 @@
+{{- $root := . }}
+{{- $processors := include "processors" .}}
+{{- range $processor :=  .Values.processors -}}
+
 apiVersion: apps/v1beta1
 kind: Deployment
 metadata:
-  name: {{ include "fullname" . }}
+  name: {{ $processor.application_id }}
   labels:
-    app: {{ include "fullname" . }}
-    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
-    release: {{ .Release.Name }}
-    heritage: {{ .Release.Service }}
-    lenses.io/app: {{ include "fullname" . }}
+    app: {{ $processor.application_id }}
+    chart: {{ $root.Chart.Name }}-{{ $root.Chart.Version }}
+    release: {{ $root.Release.Name }}
+    heritage: {{ $root.Release.Service }}
+    lenses.io/app: {{ $processor.application_id  }}
     lenses.io/app.type: lenses-processor
-    lenses.io/pipeline: {{ .Values.monitoring.pipeline | quote }}
+    lenses.io/pipeline: {{ $root.Values.monitoring.pipeline | quote }}
 spec:
-  replicas: {{ .Values.replicaCount }}
+  replicas: {{ $root.Values.replicaCount }}
   template:
     metadata:
       labels:
-        app: {{ include "fullname" . }}
-        hostPort: {{ .Values.port | quote }}
-        containerPort: {{ .Values.port | quote }}
-        lenses.io/app: {{ include "fullname" . }}
+        app: {{ $processor.application_id }}
+        hostPort: {{ $root.Values.port | quote }}
+        containerPort: {{ $root.Values.port | quote }}
+        lenses.io/app: {{ $processor.application_id }}
         lenses.io/app.type: lenses-processor
-        lenses.io/pipeline: {{ .Values.monitoring.pipeline | quote }}
+        lenses.io/pipeline: {{ $root.Values.monitoring.pipeline | quote }}
       annotations:
-        prometheus.io/scrape: {{ .Values.monitoring.enabled | quote }}
-        prometheus.io/port: {{ .Values.monitoring.port | quote }}
-        prometheus.io/path: {{ .Values.monitoring.path | quote }}
+        prometheus.io/scrape: {{ $root.Values.monitoring.enabled | quote }}
+        prometheus.io/port: {{ $root.Values.monitoring.port | quote }}
+        prometheus.io/path: {{ $root.Values.monitoring.path | quote }}
     spec:
       volumes:
         - name: kafka-secrets
           secret:
-            secretName: {{ include "fullname" . }}-kafka-secrets
+            secretName: {{ include "fullname" $root }}-kafka-secrets
             items:
               - key: client.keystore.jks
                 path: client.keystore.jks
@@ -41,14 +45,14 @@ spec:
                 path: keytab
         - name: krb
           configMap:
-            name: {{ include "fullname" . | quote }}
-      serviceAccountName: {{ .Values.serviceAccount }}
+            name: {{ include "fullname" $root | quote }}
+      serviceAccountName: {{ $root.Values.serviceAccount }}
       containers:
-      - name: {{ .Chart.Name }}
-        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-        imagePullPolicy: {{ .Values.image.pullPolicy }}
+      - name: {{ $root.Chart.Name }}
+        image: "{{ $root.Values.image.repository }}:{{ $root.Values.image.tag }}"
+        imagePullPolicy: {{ $root.Values.image.pullPolicy }}
         ports:
-        - containerPort: {{ .Values.port }}
+        - containerPort: {{ $root.Values.port }}
         lifecycle:
           preStop:
             exec:
@@ -68,41 +72,41 @@ spec:
             mountPath: "/etc/krb5.conf"
             subPath: "krb5.conf"
         resources:
-{{ toYaml .Values.resources | indent 10 }}
-        {{- if .Values.nodeSelector }}
+{{ toYaml $root.Values.resources | indent 10 }}
+        {{- if $root.Values.nodeSelector }}
         nodeSelector:
-{{ toYaml .Values.nodeSelector | indent 10 }}
+{{ toYaml $root.Values.nodeSelector | indent 10 }}
         {{- end }}
-        {{- if .Values.tolerations }}
+        {{- if $root.Values.tolerations }}
         tolerations:
-{{ toYaml .Values.tolerations | indent 10 }}
+{{ toYaml $root.Values.tolerations | indent 10 }}
         {{- end }}
         env:
         - name: ROOT_LOG_LEVEL
-          value: {{ .Values.monitoring.logLevel | quote }}
+          value: {{ $root.Values.monitoring.logLevel | quote }}
         - name: SQL
           value: |-
-{{ .Values.sql | indent 12}}
+{{ $root.Values.sql | indent 12}}
         - name: SQL_BOOTSTRAP_SERVERS
-          value: {{ include "bootstrapBrokers" . | quote }}
+          value: {{ include "bootstrapBrokers" $root | quote }}
         - name: SQL_SCHEMA_REGISTRY_URL
-          value: {{ include "registries" . | quote }}
+          value: {{ include "registries" $root | quote }}
         - name: SQL_APP_ID
-          value: {{ include "appId" . | quote }}
+          value: {{ $processor.application_id | quote }}
         - name: SQL_STATE_STORE_DIR
-          value: {{ .Values.stateStoreDir | quote }}
+          value: {{ $root.Values.stateStoreDir | quote }}
         - name: SQL_METRICS_TOPIC
-          value: {{ include "metricTopic" . | quote }}
+          value: {{ include "metricTopic" $root | quote }}
         - name: SQL_METRIC_FREQUENCY
-          value: {{ .Values.metricsFrequency | quote }}
+          value: {{ $root.Values.metricsFrequency | quote }}
         - name: SQL_PORT
-          value: {{ .Values.port | quote }}
+          value: {{ $root.Values.port | quote }}
         - name: SQL_REGISTRY_PROVIDER
-          value: {{ .Values.registryProvider | quote }}
+          value: {{ $root.Values.registryProvider | quote }}
         - name: SECURITY_PROTOCOL
-          value: {{ include "securityProtocol" . | quote }}
+          value: {{ include "securityProtocol" $root | quote }}
         - name: SASL_MECHANISM
-          value: {{ default "GSSAPI" .Values.kafka.sasl.mechanism | quote }}
+          value: {{ default "GSSAPI" $root.Values.kafka.sasl.mechanism | quote }}
         - name: SSL_TRUSTSTORE_LOCATION
           value: "/mnt/secrets/client.truststore.jks"
         - name: SSL_KEYSTORE_LOCATION
@@ -110,23 +114,24 @@ spec:
         - name: SSL_TRUSTSTORE_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: "{{ include "fullname" . }}-kafka-secrets"
+              name: "{{ include "fullname" $root }}-kafka-secrets"
               key:  "client.truststore.password"
         - name: SSL_KEYSTORE_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: "{{ include "fullname" . }}-kafka-secrets"
+              name: "{{ include "fullname" $root }}-kafka-secrets"
               key:  "client.keystore.password"
         - name: SSL_KEY_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: "{{ include "fullname" . }}-kafka-secrets"
+              name: "{{ include "fullname" $root }}-kafka-secrets"
               key:  "client.key.password"
 
-        {{- if .Values.kafka.sasl.enabled -}}
+        {{- if $root.Values.kafka.sasl.enabled -}}
         - name: JAVA_OPTS
-          value: "-Djava.security.auth.login.config=/mnt/secrets/jaas.conf {{ .Values.javaOpts }}"
+          value: "-Djava.security.auth.login.config=/mnt/secrets/jaas.conf {{ $root.Values.javaOpts }}"
         {{ else }}
         - name: JAVA_OPTS
-          value: {{ .Values.javaOpts | quote }}
+          value: {{ $root.Values.javaOpts | quote }}
         {{- end -}}
+{{- end -}}
