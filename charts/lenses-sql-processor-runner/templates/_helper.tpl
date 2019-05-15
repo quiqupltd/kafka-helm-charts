@@ -47,9 +47,9 @@ PLAINTEXT
 
 {{- define "processors" -}}
 {{- if .Values.processors -}}
-{{- .Values.processors }}
+{{- .Values.processors -}}
 {{- else -}}
-{{- (list (dict "sql" .Values.sql "application_id" .Values.application_id)) -}}
+{{- (list (dict "application_id" .Values.application_id "sql" .Values.sql)) -}}
 {{- end -}}
 {{- end -}}
 

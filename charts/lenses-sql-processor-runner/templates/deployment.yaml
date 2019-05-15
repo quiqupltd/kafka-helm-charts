@@ -1,7 +1,6 @@
 {{- $root := . }}
-{{- $processors := include "processors" .}}
-{{- range $processor :=  .Values.processors -}}
-
+# {{- $processors := include "processors" .}}
+{{- range $processor := .Values.processors -}}
 apiVersion: apps/v1beta1
 kind: Deployment
 metadata:
@@ -86,7 +85,7 @@ spec:
           value: {{ $root.Values.monitoring.logLevel | quote }}
         - name: SQL
           value: |-
-{{ $root.Values.sql | indent 12}}
+{{ $processor.sql | indent 12}}
         - name: SQL_BOOTSTRAP_SERVERS
           value: {{ include "bootstrapBrokers" $root | quote }}
         - name: SQL_SCHEMA_REGISTRY_URL

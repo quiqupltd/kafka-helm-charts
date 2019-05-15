@@ -1,15 +1,18 @@
+{{- $root := . }}
+# {{- $processors := include "processors" .}}
+{{- range $processor := .Values.processors -}}
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ template "fullname" . }}-headless
+  name: {{ $processor.application_id }}-headless
   labels:
-    app: {{ include "fullname" . | quote }}
-    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
-    release: {{ .Release.Name | quote }}
-    heritage: {{ .Release.Service | quote }}
-    lenses.io/app: {{ include "fullname" . }}
+    app: {{ $processor.application_id | quote }}
+    chart: "{{ $root.Chart.Name }}-{{ $root.Chart.Version }}"
+    release: {{ $root.Release.Name | quote }}
+    heritage: {{ $root.Release.Service | quote }}
+    lenses.io/app: {{ $processor.application_id }}
     lenses.io/app.type: lenses-service
-    lenses.io/pipeline: {{ .Values.monitoring.pipeline | quote }}
+    lenses.io/pipeline: {{ $root.Values.monitoring.pipeline | quote }}
   annotations:
     service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
 spec:
@@ -18,5 +21,6 @@ spec:
     port: 8083
   clusterIP: None
   selector:
-    app: {{ include "fullname" . | quote }}
-    release: {{ .Release.Name | quote }}
+    app: {{ $processor.application_id | quote }}
+    release: {{ $root.Release.Name | quote }}
+{{- end -}}
